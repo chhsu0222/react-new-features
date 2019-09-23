@@ -1,30 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer } from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
+
+const notesReducer = (state, action) => {
+    switch (action.type) {
+        case 'POPULATE_NOTES':
+            return action.notes
+        case 'ADD_NOTE':
+            return [
+                ...state,
+                { title: action.title, body: action.body}
+            ]
+        case 'REMOVE_NOTE':
+            return state.filter((note) => note.title !== action.title)
+        default:
+            return state
+    }
+}
+
 const NoteApp = () => {
-    const [notes, setNotes] = useState([])
+    const [notes, dispatch] = useReducer(notesReducer, [])
     const [title, setTitle] = useState('')
     const [body, setBody] = useState('')
 
     const addNote = (event) => {
         event.preventDefault()
-        setNotes([
-            ...notes,
-            { title, body }
-        ])
+        dispatch({ type: 'ADD_NOTE', title, body })
         setTitle('') // Clear the input value
         setBody('') // Clear the textarea value
     }
 
     const removeNote = (title) => {
-        setNotes(notes.filter((note) => note.title !== title))
+        dispatch({ type: 'REMOVE_NOTE', title })
     }
 
     useEffect(() => {
-        const notesData = JSON.parse(localStorage.getItem('notes'))
-        if (notesData) {
-            setNotes(notesData)
+        const notes = JSON.parse(localStorage.getItem('notes'))
+
+        if (notes) {
+            dispatch({ type: 'POPULATE_NOTES', notes })
         }
     }, [])
 
